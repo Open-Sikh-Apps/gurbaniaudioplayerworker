@@ -9,11 +9,11 @@ export default {
     const objectName = decodeURIComponent(url.pathname.slice(1)); 
     const rangeHeader = request.headers.get("Range");
 
-    // FIXED: Parse the "bytes=0-1023" string into a clean { offset, length } object
     const r2Options = {};
     if (rangeHeader) {
       const match = rangeHeader.match(/^bytes=(\d+)-(\d+)?$/);
       if (match) {
+        // FIXED: Explicitly target array indices 1 and 2 from the regex match groups
         const start = parseInt(match[1], 10);
         const end = match[2] ? parseInt(match[2], 10) : undefined;
         
@@ -22,7 +22,6 @@ export default {
           r2Options.range.length = end - start + 1;
         }
       } else {
-        // Fallback: If regex fails (e.g. complex range), pass the raw header
         r2Options.range = rangeHeader;
       }
     }
@@ -31,7 +30,6 @@ export default {
     try {
       object = await env.AUDIO_BUCKET.get(objectName, r2Options);
     } catch (r2Error) {
-      // Log the exact error for debugging if needed
       return new Response(`R2 Range Error: ${r2Error.message}`, { status: 400 });
     }
 
@@ -49,10 +47,10 @@ export default {
     const responseStatus = isPartial ? 206 : 200;
 
     if (isPartial) {
-      headers.set(
-        "Content-Range", 
-        `bytes ${object.range.offset}-${object.range.end}/${object.size}`
-      );
+      // FIXED: Use the concrete offsets returned directly by the physical R2 object
+      const startByte = object.range.offset;
+      const endByte = object.range.offset + object.range.length - 1;
+      headers.set("Content-Range", `bytes ${startByte}-${endByte}/${object.size}`);
     }
 
     return new Response(object.body, {

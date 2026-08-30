@@ -27,8 +27,6 @@ export class Media extends WorkerEntrypoint {
     headers.set("Accept-Ranges", "bytes");
     headers.set("Content-Length", String(object.size));
     headers.set("Cache-Control", CACHE_CONTROL);
-    // Same value on a later request means this body was served from cache.
-    headers.set("X-Media-Filled-At", new Date().toISOString());
 
     return new Response(object.body, { status: 200, headers });
   }

@@ -12,16 +12,16 @@ export default {
 
     const r2Options = {};
     if (rangeHeader) {
-      r2Options.range = rangeHeader;
+      // FIXED LINE: Cleans "bytes=0-1023" into just "0-1023" for the R2 API engine
+      r2Options.range = rangeHeader.replace("bytes=", "");
     }
 
     let object;
     try {
-      // 2. Wrap the direct R2 binding inside a secure try-catch safety wrapper
+      // 2. Fetch the target audio file from your native direct R2 bucket binding
       object = await env.AUDIO_BUCKET.get(objectName, r2Options);
     } catch (r2Error) {
-      // If R2 throws a range syntax error because the file doesn't exist, catch it safely
-      return new Response(`Audio track not found or invalid path: ${objectName}`, { status: 404 });
+      return new Response(`R2 Engine Error or Invalid Path: ${objectName}`, { status: 404 });
     }
 
     // 3. Fallback check if object metadata returns null
@@ -29,7 +29,7 @@ export default {
       return new Response(`Audio track not found: ${objectName}`, { status: 404 });
     }
 
-    // 4. Build clean media streaming response headers
+    // 4. Build proper media streaming response headers
     const headers = new Headers();
     object.writeHttpMetadata(headers);
     headers.set("etag", object.httpEtag);

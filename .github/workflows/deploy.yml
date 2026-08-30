@@ -15,7 +15,8 @@ jobs:
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
-          wranglerVersion: "4.x"
+          # Per-entrypoint Workers Caching needs ≥ 4.107.0
+          wranglerVersion: "4.127.1"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           # This compiles your secret into Cloudflare safely during the push step
